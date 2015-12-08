@@ -1,4 +1,4 @@
-
+[![Circle CI](https://circleci.com/gh/pavlospt/RxFile/tree/master.svg?style=svg)](https://circleci.com/gh/pavlospt/RxFile/tree/master)
 [ ![Download](https://api.bintray.com/packages/pavlospt/android-libraries/RxFile/images/download.svg) ](https://bintray.com/pavlospt/android-libraries/RxFile/_latestVersion)
 
 # RxFile
