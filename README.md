@@ -14,7 +14,7 @@ It is really easy to use it, depending on your needs it returns the appropriate 
 
 To get a File, use: (need to change the name of the method) 
 ```
-Observable<File> createFileFromGoogleDrive(Context context, Uri data, String fileName);
+Observable<File> createFileFromUri(final Context context, final Uri data);
 ```
 
 To get a thumbnail, use:
@@ -26,7 +26,7 @@ Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int
 
 To clear the caching directory, use:
 ```
-Observable<Boolean> clearCachingDirectory(final Context context);
+Observable<Boolean> clearCachingDirectory();
 ```
 
 For more, check the [Wiki](https://github.com/pavlospt/RxFile/wiki) 
