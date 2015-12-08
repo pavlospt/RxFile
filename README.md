@@ -29,7 +29,7 @@ To clear the caching directory, use:
 Observable<Boolean> clearCachingDirectory();
 ```
 
-For more, check the [Wiki](https://github.com/pavlospt/RxFile/wiki) 
+For more, check the [Wiki](https://github.com/pavlospt/RxFile/wiki/Methods) 
 
 
 Credits
