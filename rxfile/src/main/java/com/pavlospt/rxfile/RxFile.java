@@ -50,12 +50,16 @@ public class RxFile {
 
     private static final String TAG = RxFile.class.getSimpleName();
 
-    public static Observable<File> createFileFromGoogleDrive(final Context context, final Uri data, final String fileName) {
+    /*
+    * Create a copy of the file found under the provided Uri, in the Library's cache folder.
+    * */
+    public static Observable<File> createFileFromUri(final Context context, final Uri data) {
         return Observable.defer(new Func0<Observable<File>>() {
             @Override
             public Observable<File> call() {
                 DocumentFile file = DocumentFile.fromSingleUri(context,data);
                 String fileType = file.getType();
+                String fileName = file.getName();
                 File fileCreated = null;
                 Log.e(TAG,"Permission:" + checkWriteExternalPermission(context));
                 try {
@@ -107,19 +111,32 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get a thumbnail from the provided Image or Video Uri.
+    * */
     public static Observable<Bitmap> getThumbnail(Context context, Uri uri) {
         return getThumbnailFromUri(context, uri);
     }
 
+    /*
+    * Get a thumbnail from the provided Image or Video Uri in the specified size.
+    * */
     public static Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int requiredHeight) {
         return getThumbnailFromUriWithSize(context, uri, requiredWidth, requiredHeight);
     }
 
+    /*
+    * Get a thumbnail from the provided Image or Video Uri in the specified size and kind.
+    * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
+    * */
     public static Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int requiredHeight, int kind) {
         return getThumbnailFromUriWithSizeAndKind(context, uri, requiredWidth, requiredHeight, kind);
     }
 
-    public static Observable<Bitmap> getThumbnailFromUri(final Context context, final Uri data) {
+    /*
+    * Get a thumbnail from the provided Image or Video Uri.
+    * */
+    private static Observable<Bitmap> getThumbnailFromUri(final Context context, final Uri data) {
         return Observable.fromCallable(new Func0<Bitmap>() {
             @Override
             public Bitmap call() {
@@ -212,7 +229,10 @@ public class RxFile {
         });
     }
 
-    public static Observable<Bitmap> getThumbnailFromUriWithSize(
+    /*
+    * Get a thumbnail from the provided Image or Video Uri in the specified size.
+    * */
+    private static Observable<Bitmap> getThumbnailFromUriWithSize(
             final Context context,
             final Uri data,
             final int requiredWidth,
@@ -284,7 +304,11 @@ public class RxFile {
         });
     }
 
-    public static Observable<Bitmap> getThumbnailFromUriWithSizeAndKind(
+    /*
+    * Get a thumbnail from the provided Image or Video Uri in the specified size and kind.
+    * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
+    * */
+    private static Observable<Bitmap> getThumbnailFromUriWithSizeAndKind(
             final Context context,
             final Uri data,
             final int requiredWidth,
@@ -357,7 +381,10 @@ public class RxFile {
         });
     }
 
-    public static Observable<Boolean> clearCachingDirectory(final Context context) {
+    /*
+    * Clear the Library's default cache directory.
+    * */
+    public static Observable<Boolean> clearCachingDirectory() {
         return Observable.fromCallable(new Func0<Boolean>() {
             @Override
             public Boolean call() {
@@ -386,6 +413,9 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get a file extension based on the given file name.
+    * */
     public static Observable<String> getFileExtension(final String fileName) {
         return Observable.fromCallable(new Func0<String>() {
             @Override
@@ -395,6 +425,9 @@ public class RxFile {
         });
     }
 
+    /*
+    * Check if a File exists.
+    * */
     public static Observable<Boolean> ifExists(final String path) {
         return Observable.fromCallable(new Func0<Boolean>() {
             @Override
@@ -404,6 +437,9 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get thumbnail from a File path.
+    * */
     public static Observable<Bitmap> getThumbnail(String filePath) {
         return getFileType(filePath)
                 .filter(new Func1<String, Boolean>() {
@@ -424,6 +460,9 @@ public class RxFile {
                 });
     }
 
+    /*
+    * Get video thumbnail from a video file, by path.
+    * */
     public static Observable<Bitmap> getVideoThumbnail(final String filePath) {
         return Observable.fromCallable(new Func0<Bitmap>() {
             @Override
@@ -433,7 +472,11 @@ public class RxFile {
         });
     }
 
-    public static Observable<Bitmap> getVideoThumbnailFromPath(final String path, final int kind) {
+    /*
+    * Get video thumbnail from a video file, by path, with the selected kind.
+    * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
+    * */
+    public static Observable<Bitmap> getVideoThumbnailFromPathWithKind(final String path, final int kind) {
         return Observable.defer(new Func0<Observable<Bitmap>>() {
             @Override
             public Observable<Bitmap> call() {
@@ -442,6 +485,9 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get image thumbnail from an image file, by path.
+    * */
     public static Observable<Bitmap> getThumbnailFromPath(String filePath) {
         final Bitmap sourceBitmap = BitmapFactory.decodeFile(filePath);
         return Observable.fromCallable(new Func0<Bitmap>() {
@@ -464,6 +510,9 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get path from Uri, for a FileDocument.
+    * */
     public static Observable<String> getPathFromUriForFileDocument(final Context context, final Uri contentUri) {
         return Observable.fromCallable(new Func0<String>() {
             @Override
@@ -482,6 +531,9 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get path from Uri, for a MediaDocument.
+    * */
     public static Observable<String> getPathFromUriForMediaDocument(final Context context,
                                                                      final Uri mediaUri,
                                                                      final String mediaDocumentId) {
@@ -502,8 +554,10 @@ public class RxFile {
         });
     }
 
+    /*
+    * Get path from Uri, for an ImageDocument.
+    * */
     public static Observable<String> getPathFromUriForImageDocument(final Context context,
-                                                                    Uri mediaUri,
                                                                     final String mediaDocumentId) {
         return Observable.fromCallable(new Func0<String>() {
             @Override
@@ -523,8 +577,10 @@ public class RxFile {
         });
     }
 
-    private static Observable<String> getPathFromUriForVideoDocument(final Context context,
-                                                                     Uri mediaUri,
+    /*
+    * Get path from Uri, for a VideoDocument.
+    * */
+    public static Observable<String> getPathFromUriForVideoDocument(final Context context,
                                                                      final String mediaDocumentId) {
         return Observable.fromCallable(new Func0<String>() {
             @Override
@@ -609,7 +665,7 @@ public class RxFile {
         return temp.exists();
     }
 
-    public static void fastChannelCopy(final ReadableByteChannel src,
+    private static void fastChannelCopy(final ReadableByteChannel src,
                                        final WritableByteChannel dest) throws IOException {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
         while (src.read(buffer) != -1) {
@@ -623,7 +679,7 @@ public class RxFile {
         }
     }
 
-    public static int calculateInSampleSize(
+    private static int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
         final int width = options.outWidth;

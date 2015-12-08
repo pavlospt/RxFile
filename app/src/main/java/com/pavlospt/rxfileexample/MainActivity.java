@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void cacheFileFromDrive(Uri uri, String fileName) {
-        RxFile.createFileFromGoogleDrive(this,uri, fileName)
+        RxFile.createFileFromUri(this,uri)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<File>() {
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchThumbnail(Uri data) {
-        RxFile.getThumbnailFromUri(this,data)
+        RxFile.getThumbnail(this,data)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<Bitmap>() {
