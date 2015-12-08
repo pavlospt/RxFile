@@ -8,7 +8,7 @@ Rx methods to get a File and Image or Video thumbnails from any DocumentProvider
 
 Available on `jCenter()` and `mavenCentral()`
 ```
-compile 'com.github.pavlospt:rxfile:1.1'
+compile 'com.github.pavlospt:rxfile:1.2'
 ```
 
 # How To Use
