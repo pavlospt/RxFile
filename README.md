@@ -5,8 +5,10 @@
 Rx methods to get a File and Image or Video thumbnails from any DocumentProvider on Android (Drive, Dropbox, Photos etc)
 
 # How To Install
+
+Available on `jCenter()` and `mavenCentral()`
 ```
-compile 'com.github.pavlospt:rxfile:1.0'
+compile 'com.github.pavlospt:rxfile:1.1'
 ```
 
 # How To Use
