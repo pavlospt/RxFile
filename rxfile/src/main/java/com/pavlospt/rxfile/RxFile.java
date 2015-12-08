@@ -60,46 +60,38 @@ public class RxFile {
                 DocumentFile file = DocumentFile.fromSingleUri(context,data);
                 String fileType = file.getType();
                 String fileName = file.getName();
-                File fileCreated = null;
-                Log.e(TAG,"Permission:" + checkWriteExternalPermission(context));
+                File fileCreated;
                 try {
-                    if (checkWriteExternalPermission(context)) {
-                        ParcelFileDescriptor parcelFileDescriptor =
-                                context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
-                        InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-                        String filePath = Environment.getExternalStorageDirectory().getPath()
-                                + Constants.DEFAULT_CACHE_DIRECTORY_NAME
-                                + fileName;
-                        String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-                        String dirPath = Environment.getExternalStorageDirectory().getPath()
-                                + Constants.DEFAULT_CACHE_DIRECTORY_NAME;
-                        Log.e(TAG, "Cache dir path: " + dirPath);
-                        String mimeType = getMimeType(fileName);
+                    ParcelFileDescriptor parcelFileDescriptor =
+                            context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
+                    InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+                    Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
+                    String filePath = context.getExternalCacheDir()
+                            + Constants.FOLDER_SEPARATOR
+                            + fileName;
+                    String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
+                    String mimeType = getMimeType(fileName);
 
-                        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
+                    Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
 
-                        Log.e(TAG, "Extension: " + fileExtension);
+                    Log.e(TAG, "Extension: " + fileExtension);
 
-                        if (fileType.equals(Constants.APPLICATION_PDF)
-                                && mimeType == null) {
-                            filePath += "." + Constants.PDF_EXTENSION;
-                        }
-
-                        createDirectory(dirPath);
-                        createFile(filePath);
-
-                        ReadableByteChannel from = Channels.newChannel(inputStream);
-                        WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
-                        fastChannelCopy(from, to);
-                        from.close();
-                        to.close();
-                        fileCreated = new File(filePath);
-                        Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
-                    } else {
-                        Log.e(TAG, "You must supply "
-                                + Constants.WRITE_EXTERNAL_PERMISSION
-                                + " in your Manifest.");
+                    if (fileType.equals(Constants.APPLICATION_PDF)
+                            && mimeType == null) {
+                        filePath += "." + Constants.PDF_EXTENSION;
                     }
+
+                    if(!createFile(filePath)) {
+                        return Observable.just(new File(filePath));
+                    }
+
+                    ReadableByteChannel from = Channels.newChannel(inputStream);
+                    WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
+                    fastChannelCopy(from, to);
+                    from.close();
+                    to.close();
+                    fileCreated = new File(filePath);
+                    Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
                 } catch (Exception e) {
                     Log.e(TAG, "Exception: " + e.getMessage());
                     e.printStackTrace();
@@ -646,7 +638,7 @@ public class RxFile {
         }
     }
 
-    private static void createFile(String path) throws IOException {
+    private static boolean createFile(String path) throws IOException {
         if (!checkExistence(path)) {
             File temp = new File(path);
             if (!temp.createNewFile()) {
@@ -656,7 +648,9 @@ public class RxFile {
             }
         } else {
             Log.e(TAG, "File: " + path + " already exists.");
+            return false;
         }
+        return true;
     }
 
     private static boolean checkExistence(String path) {
