@@ -28,11 +28,6 @@ Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int
 Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int requiredHeight, int kind);
 ```
 
-To clear the caching directory, use:
-```
-Observable<Boolean> clearCachingDirectory();
-```
-
 For more, check the [Wiki](https://github.com/pavlospt/RxFile/wiki/Methods) 
 
 
