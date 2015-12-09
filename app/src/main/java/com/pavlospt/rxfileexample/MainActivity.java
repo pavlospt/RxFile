@@ -1,5 +1,6 @@
 package com.pavlospt.rxfileexample;
 
+import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -20,6 +21,7 @@ import com.pavlospt.rxfile.RxFile;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.util.List;
 
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -48,10 +50,21 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startIntentForFilePick();
+//                startIntentForFilePick();
+//                startIntentForPick();
+                startIntentForMultiFilePick();
             }
         });
 
+    }
+
+    private void startIntentForMultiFilePick() {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        startActivityForResult(Intent.createChooser(intent, "Pick files"), REQUEST_FOR_FILES);
     }
 
     private void startIntentForFilePick() {
@@ -87,14 +100,7 @@ public class MainActivity extends AppCompatActivity {
                     DocumentFile file = DocumentFile.fromSingleUri(this,data.getClipData().getItemAt(0).getUri());
                     Log.e(TAG,"FileName: " + file.getName() + " FileType: " + file.getType());
                     Log.e(TAG,"Document uri: " + file.getUri());
-                    try {
-                        ParcelFileDescriptor descriptor = getContentResolver().openFileDescriptor(file.getUri(),"r");
-                        FileDescriptor fileDescriptor = descriptor.getFileDescriptor();
-                        Log.e(TAG,"File Descriptor: " + fileDescriptor.toString());
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-
+//                    fetchFiles(data.getClipData());
                 }
             }else if(requestCode == REQUEST_FOR_FILES){
                 if(data.getData() != null) {
@@ -103,9 +109,40 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG,"FileName: " + file.getName() + " FileType: " + file.getType());
                     Log.e(TAG,"Document uri: " + file.getUri());
                     cacheFileFromDrive(file.getUri(), file.getName());
+                }else{
+                    Log.e(TAG,"Single selection");
+                    DocumentFile file = DocumentFile.fromSingleUri(this,data.getClipData().getItemAt(0).getUri());
+                    Log.e(TAG,"FileName: " + file.getName() + " FileType: " + file.getType());
+                    Log.e(TAG,"Document uri: " + file.getUri());
+                    fetchFiles(data.getClipData());
                 }
             }
         }
+    }
+
+    private void fetchFiles(ClipData clipData) {
+        RxFile.createFilesFromClipData(this,clipData)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<File>>() {
+                    @Override
+                    public void onCompleted() {
+                        Timber.e("onCompleted() for Files called");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Timber.e("Error on files fetching:" + e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(List<File> files) {
+                        Timber.e("Files list size:" + files.size());
+                        for(File f : files){
+                            Timber.e("onNext() file called:" + f.getAbsolutePath());
+                        }
+                    }
+                });
     }
 
     private void cacheFileFromDrive(Uri uri, String fileName) {

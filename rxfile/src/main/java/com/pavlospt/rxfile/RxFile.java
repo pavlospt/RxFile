@@ -1,5 +1,6 @@
 package com.pavlospt.rxfile;
 
+import android.content.ClipData;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -26,8 +27,13 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
+import rx.exceptions.Exceptions;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
@@ -101,6 +107,130 @@ public class RxFile {
                 return Observable.just(fileCreated);
             }
         });
+    }
+
+    /*
+    * Create a copy of the files found under the provided ArrayList of Uris, in the Library's cache folder.
+    * */
+    public static Observable<List<File>> createFileFromUri(final Context context, final ArrayList<Uri> uris) {
+        return Observable.defer(new Func0<Observable<List<File>>>() {
+            @Override
+            public Observable<List<File>> call() {
+
+                List<File> filesRetrieved = new ArrayList<>(uris.size());
+
+                for(Uri data : uris) {
+                    DocumentFile file = DocumentFile.fromSingleUri(context,data);
+                    String fileType = file.getType();
+                    String fileName = file.getName();
+                    File fileCreated;
+                    try {
+                        ParcelFileDescriptor parcelFileDescriptor =
+                                context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
+                        InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+                        Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
+                        String filePath = context.getExternalCacheDir()
+                                + Constants.FOLDER_SEPARATOR
+                                + fileName;
+                        String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
+                        String mimeType = getMimeType(fileName);
+
+                        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
+
+                        Log.e(TAG, "Extension: " + fileExtension);
+
+                        if (fileType.equals(Constants.APPLICATION_PDF)
+                                && mimeType == null) {
+                            filePath += "." + Constants.PDF_EXTENSION;
+                        }
+
+                        if(!createFile(filePath)) {
+                            filesRetrieved.add(new File(filePath));
+                        }else{
+                            ReadableByteChannel from = Channels.newChannel(inputStream);
+                            WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
+                            fastChannelCopy(from, to);
+                            from.close();
+                            to.close();
+                            fileCreated = new File(filePath);
+                            filesRetrieved.add(fileCreated);
+                            Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception: " + e.getMessage());
+                        e.printStackTrace();
+                        return Observable.error(e);
+                    }
+                }
+
+                return Observable.just(filesRetrieved);
+            }
+        });
+    }
+
+    /*
+    * Create a copy of the files found under the ClipData item passed from MultiSelection, in the Library's cache folder.
+    * */
+    public static Observable<List<File>> createFilesFromClipData(final Context context, final ClipData clipData) {
+
+        return Observable.defer(new Func0<Observable<List<File>>>() {
+            @Override
+            public Observable<List<File>> call() {
+                int numOfUris = clipData.getItemCount();
+                List<File> filesRetrieved = new ArrayList<>(numOfUris);
+
+                for(int i=0; i < numOfUris; i++) {
+                    Uri data = clipData.getItemAt(i).getUri();
+                    if(data != null) {
+                        DocumentFile file = DocumentFile.fromSingleUri(context,data);
+                        String fileType = file.getType();
+                        String fileName = file.getName();
+                        File fileCreated;
+                        try {
+
+                            ParcelFileDescriptor parcelFileDescriptor =
+                                    context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
+
+                            InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+
+                            String filePath = context.getExternalCacheDir()
+                                    + Constants.FOLDER_SEPARATOR
+                                    + fileName;
+                            String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
+                            String mimeType = getMimeType(fileName);
+
+                            Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
+
+                            Log.e(TAG, "Extension: " + fileExtension);
+
+                            if (fileType.equals(Constants.APPLICATION_PDF)
+                                    && mimeType == null) {
+                                filePath += "." + Constants.PDF_EXTENSION;
+                            }
+
+                            if(!createFile(filePath)) {
+                                filesRetrieved.add(new File(filePath));
+                            }else{
+                                ReadableByteChannel from = Channels.newChannel(inputStream);
+                                WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
+                                fastChannelCopy(from, to);
+                                from.close();
+                                to.close();
+                                fileCreated = new File(filePath);
+                                filesRetrieved.add(fileCreated);
+                                Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception: " + e.getMessage());
+                            e.printStackTrace();
+                            return Observable.error(e);
+                        }
+                    }
+                }
+                return Observable.just(filesRetrieved);
+            }
+        });
+
     }
 
     /*
