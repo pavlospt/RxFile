@@ -8,7 +8,7 @@ Rx methods to get a File and Image or Video thumbnails from any DocumentProvider
 
 Available on `jCenter()` and `mavenCentral()`
 ```
-compile 'com.github.pavlospt:rxfile:1.2'
+compile 'com.github.pavlospt:rxfile:1.3'
 ```
 
 # How To Use
@@ -17,6 +17,8 @@ It is really easy to use it, depending on your needs it returns the appropriate 
 To get a File, use: (need to change the name of the method) 
 ```
 Observable<File> createFileFromUri(final Context context, final Uri data);
+Observable<List<File>> createFileFromUri(final Context context, final ArrayList<Uri> uris);
+Observable<List<File>> createFilesFromClipData(final Context context, final ArrayList<Uri> uris);
 ```
 
 To get a thumbnail, use:
