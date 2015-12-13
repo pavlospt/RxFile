@@ -1,6 +1,7 @@
 [![Circle CI](https://circleci.com/gh/pavlospt/RxFile/tree/master.svg?style=svg)](https://circleci.com/gh/pavlospt/RxFile/tree/master)
 [ ![Download](https://api.bintray.com/packages/pavlospt/android-libraries/RxFile/images/download.svg) ](https://bintray.com/pavlospt/android-libraries/RxFile/_latestVersion)
 [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-RxFile-brightgreen.svg?style=flat)](http://android-arsenal.com/details/1/2901)
+[![Android_Weekly](https://img.shields.io/badge/Android%20Weekly-LondonEyeLayoutManager-green.svg)](http://androidweekly.net/issues/issue-183)
 
 # RxFile
 Rx methods to get a File and Image or Video thumbnails from any DocumentProvider on Android (Drive, Dropbox, Photos etc)
