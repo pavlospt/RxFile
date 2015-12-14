@@ -27,13 +27,9 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import rx.Observable;
-import rx.Observer;
-import rx.Subscriber;
-import rx.exceptions.Exceptions;
 import rx.functions.Func0;
 import rx.functions.Func1;
 
@@ -63,48 +59,13 @@ public class RxFile {
         return Observable.defer(new Func0<Observable<File>>() {
             @Override
             public Observable<File> call() {
-                DocumentFile file = DocumentFile.fromSingleUri(context,data);
-                String fileType = file.getType();
-                String fileName = file.getName();
-                File fileCreated;
                 try {
-                    ParcelFileDescriptor parcelFileDescriptor =
-                            context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
-                    InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-                    Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
-                    String filePath = context.getExternalCacheDir()
-                            + Constants.FOLDER_SEPARATOR
-                            + fileName;
-                    String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-                    String mimeType = getMimeType(fileName);
-
-                    Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
-
-                    Log.e(TAG, "Extension: " + fileExtension);
-
-                    if (fileType.equals(Constants.APPLICATION_PDF)
-                            && mimeType == null) {
-                        filePath += "." + Constants.PDF_EXTENSION;
-                    }
-
-                    if(!createFile(filePath)) {
-                        return Observable.just(new File(filePath));
-                    }
-
-                    ReadableByteChannel from = Channels.newChannel(inputStream);
-                    WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
-                    fastChannelCopy(from, to);
-                    from.close();
-                    to.close();
-                    fileCreated = new File(filePath);
-                    Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
+                    return Observable.just(fileFromUri(context, data));
                 } catch (Exception e) {
                     Log.e(TAG, "Exception: " + e.getMessage());
                     e.printStackTrace();
                     return Observable.error(e);
                 }
-
-                return Observable.just(fileCreated);
             }
         });
     }
@@ -120,42 +81,8 @@ public class RxFile {
                 List<File> filesRetrieved = new ArrayList<>(uris.size());
 
                 for(Uri data : uris) {
-                    DocumentFile file = DocumentFile.fromSingleUri(context,data);
-                    String fileType = file.getType();
-                    String fileName = file.getName();
-                    File fileCreated;
                     try {
-                        ParcelFileDescriptor parcelFileDescriptor =
-                                context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
-                        InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-                        Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
-                        String filePath = context.getExternalCacheDir()
-                                + Constants.FOLDER_SEPARATOR
-                                + fileName;
-                        String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-                        String mimeType = getMimeType(fileName);
-
-                        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
-
-                        Log.e(TAG, "Extension: " + fileExtension);
-
-                        if (fileType.equals(Constants.APPLICATION_PDF)
-                                && mimeType == null) {
-                            filePath += "." + Constants.PDF_EXTENSION;
-                        }
-
-                        if(!createFile(filePath)) {
-                            filesRetrieved.add(new File(filePath));
-                        }else{
-                            ReadableByteChannel from = Channels.newChannel(inputStream);
-                            WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
-                            fastChannelCopy(from, to);
-                            from.close();
-                            to.close();
-                            fileCreated = new File(filePath);
-                            filesRetrieved.add(fileCreated);
-                            Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
-                        }
+                        filesRetrieved.add(fileFromUri(context, data));
                     } catch (Exception e) {
                         Log.e(TAG, "Exception: " + e.getMessage());
                         e.printStackTrace();
@@ -182,44 +109,8 @@ public class RxFile {
                 for(int i=0; i < numOfUris; i++) {
                     Uri data = clipData.getItemAt(i).getUri();
                     if(data != null) {
-                        DocumentFile file = DocumentFile.fromSingleUri(context,data);
-                        String fileType = file.getType();
-                        String fileName = file.getName();
-                        File fileCreated;
                         try {
-
-                            ParcelFileDescriptor parcelFileDescriptor =
-                                    context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
-
-                            InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-
-                            String filePath = context.getExternalCacheDir()
-                                    + Constants.FOLDER_SEPARATOR
-                                    + fileName;
-                            String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-                            String mimeType = getMimeType(fileName);
-
-                            Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
-
-                            Log.e(TAG, "Extension: " + fileExtension);
-
-                            if (fileType.equals(Constants.APPLICATION_PDF)
-                                    && mimeType == null) {
-                                filePath += "." + Constants.PDF_EXTENSION;
-                            }
-
-                            if(!createFile(filePath)) {
-                                filesRetrieved.add(new File(filePath));
-                            }else{
-                                ReadableByteChannel from = Channels.newChannel(inputStream);
-                                WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
-                                fastChannelCopy(from, to);
-                                from.close();
-                                to.close();
-                                fileCreated = new File(filePath);
-                                filesRetrieved.add(fileCreated);
-                                Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
-                            }
+                            filesRetrieved.add(fileFromUri(context, data));
                         } catch (Exception e) {
                             Log.e(TAG, "Exception: " + e.getMessage());
                             e.printStackTrace();
@@ -231,6 +122,44 @@ public class RxFile {
             }
         });
 
+    }
+
+    private static File fileFromUri(Context context, Uri data) throws Exception {
+        DocumentFile file = DocumentFile.fromSingleUri(context,data);
+        String fileType = file.getType();
+        String fileName = file.getName();
+        File fileCreated;
+        ParcelFileDescriptor parcelFileDescriptor =
+                context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
+        InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+        Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
+        String filePath = context.getExternalCacheDir()
+                + Constants.FOLDER_SEPARATOR
+                + fileName;
+        String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
+        String mimeType = getMimeType(fileName);
+
+        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
+
+        Log.e(TAG, "Extension: " + fileExtension);
+
+        if (fileType.equals(Constants.APPLICATION_PDF)
+                && mimeType == null) {
+            filePath += "." + Constants.PDF_EXTENSION;
+        }
+
+        if(!createFile(filePath)) {
+            return new File(filePath);
+        }
+
+        ReadableByteChannel from = Channels.newChannel(inputStream);
+        WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
+        fastChannelCopy(from, to);
+        from.close();
+        to.close();
+        fileCreated = new File(filePath);
+        Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
+        return fileCreated;
     }
 
     /*
@@ -259,96 +188,7 @@ public class RxFile {
     * Get a thumbnail from the provided Image or Video Uri.
     * */
     private static Observable<Bitmap> getThumbnailFromUri(final Context context, final Uri data) {
-        return Observable.fromCallable(new Func0<Bitmap>() {
-            @Override
-            public Bitmap call() {
-                Bitmap bitmap = null;
-                if (!isMediaUri(data)) {
-                    Log.e(TAG, "Not a media uri");
-                    if (isGoogleDriveDocument(data)){
-                        Log.e(TAG, "Google Drive Uri");
-                        DocumentFile file = DocumentFile.fromSingleUri(context,data);
-                        if(file.getType().startsWith(Constants.IMAGE_TYPE) ||
-                                file.getType().startsWith(Constants.VIDEO_TYPE)){
-                            Log.e(TAG, "Google Drive Uri");
-                            ParcelFileDescriptor parcelFileDescriptor;
-                            try {
-                                parcelFileDescriptor = context.getContentResolver().
-                                        openFileDescriptor(data, Constants.READ_MODE);
-                                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                                bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-                                parcelFileDescriptor.close();
-                                return bitmap;
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                Log.e(TAG,"Google Drive uri error:" + e.getMessage());
-                            }
-                        }
-                    } else if(data.getScheme().equals(Constants.FILE)){
-                        Log.e(TAG,"Dropbox or other content provider");
-                        ParcelFileDescriptor parcelFileDescriptor;
-                        try {
-                            parcelFileDescriptor = context.getContentResolver().
-                                    openFileDescriptor(data, Constants.READ_MODE);
-                            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                            bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-                            parcelFileDescriptor.close();
-                            return bitmap;
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        ParcelFileDescriptor parcelFileDescriptor;
-                        try {
-                            parcelFileDescriptor = context.getContentResolver().
-                                    openFileDescriptor(data, Constants.READ_MODE);
-                            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                            bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-                            parcelFileDescriptor.close();
-                            return bitmap;
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }else {
-                    Log.e(TAG, "Uri for thumbnail: " + data.toString());
-                    Log.e(TAG, "Uri for thumbnail: " + data);
-                    String[] parts = data.getLastPathSegment().split(":");
-                    String fileId = parts[1];
-                    Cursor cursor = null;
-                    try {
-                        cursor = context.getContentResolver().query(data, null, null, null, null);
-                        if (cursor != null) {
-                            Log.e(TAG, "Cursor size: " + cursor.getCount());
-                            if (cursor.moveToFirst()) {
-                                if (data.toString().contains(Constants.VIDEO)) {
-                                    bitmap = MediaStore.Video.Thumbnails.getThumbnail(
-                                            context.getContentResolver(),
-                                            Long.parseLong(fileId),
-                                            MediaStore.Video.Thumbnails.MINI_KIND,
-                                            null);
-                                } else if (data.toString().contains(Constants.IMAGE)) {
-                                    Log.e(TAG, "Image Uri");
-                                    bitmap = MediaStore.Images.Thumbnails.getThumbnail(
-                                            context.getContentResolver(),
-                                            Long.parseLong(fileId),
-                                            MediaStore.Images.Thumbnails.MINI_KIND,
-                                            null);
-                                }
-                                Log.e(TAG, bitmap == null ? "null" : "not null");
-                            }
-                        }
-                        return bitmap;
-                    } catch (Exception e) {
-                        Log.e(TAG, "Exception while getting thumbnail:" + e.getMessage());
-                    } finally {
-                        if (cursor != null)
-                            cursor.close();
-                    }
-                }
-                return bitmap;
-            }
-        });
+        return getThumbnailFromUriWithSizeAndKind(context, data, 0, 0, MediaStore.Images.Thumbnails.MINI_KIND);
     }
 
     /*
@@ -360,70 +200,8 @@ public class RxFile {
             final int requiredWidth,
             final int requiredHeight
     ) {
-        return Observable.fromCallable(new Func0<Bitmap>() {
-            @Override
-            public Bitmap call() {
-                Bitmap bitmap = null;
-                ParcelFileDescriptor parcelFileDescriptor;
-                final BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                options.inSampleSize = calculateInSampleSize(options, requiredWidth, requiredHeight);
-                options.inJustDecodeBounds = false;
-                if (!isMediaUri(data)) {
-                    Log.e(TAG, "Not a media uri");
-                    if (isGoogleDriveDocument(data)){
-                        Log.e(TAG, "Google Drive Uri");
-                        DocumentFile file = DocumentFile.fromSingleUri(context,data);
-                        try {
-                            parcelFileDescriptor = context.getContentResolver().
-                                    openFileDescriptor(data, Constants.READ_MODE);
-                            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                            bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
-                            parcelFileDescriptor.close();
-                            return bitmap;
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }else {
-                    Log.e(TAG, "Uri for thumbnail: " + data.toString());
-                    Log.e(TAG, "Uri for thumbnail: " + data);
-                    String[] parts = data.getLastPathSegment().split(":");
-                    String fileId = parts[1];
-                    Cursor cursor = null;
-                    try {
-                        cursor = context.getContentResolver().query(data, null, null, null, null);
-                        if (cursor != null) {
-                            Log.e(TAG, "Cursor size: " + cursor.getCount());
-                            if (cursor.moveToFirst()) {
-                                if (data.toString().contains(Constants.VIDEO)) {
-                                    bitmap = MediaStore.Video.Thumbnails.getThumbnail(
-                                            context.getContentResolver(),
-                                            Long.parseLong(fileId),
-                                            MediaStore.Video.Thumbnails.MINI_KIND,
-                                            options);
-                                } else if (data.toString().contains(Constants.IMAGE)) {
-                                    Log.e(TAG, "Image Uri");
-                                    bitmap = MediaStore.Images.Thumbnails.getThumbnail(
-                                            context.getContentResolver(),
-                                            Long.parseLong(fileId),
-                                            MediaStore.Images.Thumbnails.MINI_KIND,
-                                            options);
-                                }
-                                Log.e(TAG, bitmap == null ? "null" : "not null");
-                            }
-                        }
-                        return bitmap;
-                    } catch (Exception e) {
-                        Log.e(TAG, "Exception while getting thumbnail:" + e.getMessage());
-                    } finally {
-                        if (cursor != null)
-                            cursor.close();
-                    }
-                }
-                return bitmap;
-            }
-        });
+        return getThumbnailFromUriWithSizeAndKind(context, data, requiredWidth, requiredHeight,
+                MediaStore.Images.Thumbnails.MINI_KIND);
     }
 
     /*
@@ -443,14 +221,43 @@ public class RxFile {
                 Bitmap bitmap = null;
                 ParcelFileDescriptor parcelFileDescriptor;
                 final BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                options.inSampleSize = calculateInSampleSize(options, requiredWidth, requiredHeight);
-                options.inJustDecodeBounds = false;
+                if (requiredWidth > 0 && requiredHeight > 0) {
+                    options.inJustDecodeBounds = true;
+                    options.inSampleSize = calculateInSampleSize(options, requiredWidth, requiredHeight);
+                    options.inJustDecodeBounds = false;
+                }
                 if (!isMediaUri(data)) {
                     Log.e(TAG, "Not a media uri");
                     if (isGoogleDriveDocument(data)){
                         Log.e(TAG, "Google Drive Uri");
                         DocumentFile file = DocumentFile.fromSingleUri(context,data);
+                        if(file.getType().startsWith(Constants.IMAGE_TYPE) ||
+                                file.getType().startsWith(Constants.VIDEO_TYPE)) {
+                            Log.e(TAG, "Google Drive Uri");
+                            try {
+                                parcelFileDescriptor = context.getContentResolver().
+                                        openFileDescriptor(data, Constants.READ_MODE);
+                                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+                                bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+                                parcelFileDescriptor.close();
+                                return bitmap;
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }else if(data.getScheme().equals(Constants.FILE)){
+                        Log.e(TAG,"Dropbox or other content provider");
+                        try {
+                            parcelFileDescriptor = context.getContentResolver().
+                                    openFileDescriptor(data, Constants.READ_MODE);
+                            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+                            bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+                            parcelFileDescriptor.close();
+                            return bitmap;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
                         try {
                             parcelFileDescriptor = context.getContentResolver().
                                     openFileDescriptor(data, Constants.READ_MODE);
