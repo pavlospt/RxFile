@@ -124,44 +124,6 @@ public class RxFile {
 
     }
 
-    private static File fileFromUri(Context context, Uri data) throws Exception {
-        DocumentFile file = DocumentFile.fromSingleUri(context,data);
-        String fileType = file.getType();
-        String fileName = file.getName();
-        File fileCreated;
-        ParcelFileDescriptor parcelFileDescriptor =
-                context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
-        InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-        Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
-        String filePath = context.getExternalCacheDir()
-                + Constants.FOLDER_SEPARATOR
-                + fileName;
-        String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-        String mimeType = getMimeType(fileName);
-
-        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
-
-        Log.e(TAG, "Extension: " + fileExtension);
-
-        if (fileType.equals(Constants.APPLICATION_PDF)
-                && mimeType == null) {
-            filePath += "." + Constants.PDF_EXTENSION;
-        }
-
-        if(!createFile(filePath)) {
-            return new File(filePath);
-        }
-
-        ReadableByteChannel from = Channels.newChannel(inputStream);
-        WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
-        fastChannelCopy(from, to);
-        from.close();
-        to.close();
-        fileCreated = new File(filePath);
-        Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
-        return fileCreated;
-    }
-
     /*
     * Get a thumbnail from the provided Image or Video Uri.
     * */
@@ -306,38 +268,6 @@ public class RxFile {
                     }
                 }
                 return bitmap;
-            }
-        });
-    }
-
-    /*
-    * Clear the Library's default cache directory.
-    * */
-    public static Observable<Boolean> clearCachingDirectory() {
-        return Observable.fromCallable(new Func0<Boolean>() {
-            @Override
-            public Boolean call() {
-                ArrayList<File> filesInDir = null;
-                String dirPath = Environment.getExternalStorageDirectory().getPath()
-                        + Constants.DEFAULT_CACHE_DIRECTORY_NAME;
-                File tempDirFile = new File(dirPath);
-                if (tempDirFile.exists()) {
-                    if (tempDirFile.isDirectory()) {
-                        if (tempDirFile.listFiles().length > 0)
-                            filesInDir = new ArrayList<>(Arrays.asList(tempDirFile.listFiles()));
-                    }
-                }
-                if (filesInDir != null) {
-                    for (File f : filesInDir) {
-                        if (f.exists() && f.isFile()) {
-                            if (!f.delete()) {
-                                Log.e(TAG, "Something went wrong " +
-                                        "while trying to delete file: " + f.getName());
-                            }
-                        }
-                    }
-                } else return false;
-                return true;
             }
         });
     }
@@ -629,6 +559,44 @@ public class RxFile {
         }
 
         return inSampleSize;
+    }
+
+    private static File fileFromUri(Context context, Uri data) throws Exception {
+        DocumentFile file = DocumentFile.fromSingleUri(context,data);
+        String fileType = file.getType();
+        String fileName = file.getName();
+        File fileCreated;
+        ParcelFileDescriptor parcelFileDescriptor =
+                context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
+        InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+        Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
+        String filePath = context.getExternalCacheDir()
+                + Constants.FOLDER_SEPARATOR
+                + fileName;
+        String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
+        String mimeType = getMimeType(fileName);
+
+        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
+
+        Log.e(TAG, "Extension: " + fileExtension);
+
+        if (fileType.equals(Constants.APPLICATION_PDF)
+                && mimeType == null) {
+            filePath += "." + Constants.PDF_EXTENSION;
+        }
+
+        if(!createFile(filePath)) {
+            return new File(filePath);
+        }
+
+        ReadableByteChannel from = Channels.newChannel(inputStream);
+        WritableByteChannel to = Channels.newChannel(new FileOutputStream(filePath));
+        fastChannelCopy(from, to);
+        from.close();
+        to.close();
+        fileCreated = new File(filePath);
+        Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
+        return fileCreated;
     }
 
 }
