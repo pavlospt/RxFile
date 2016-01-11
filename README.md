@@ -20,7 +20,7 @@ To get a File, use: (need to change the name of the method)
 ```
 Observable<File> createFileFromUri(final Context context, final Uri data);
 Observable<List<File>> createFileFromUri(final Context context, final ArrayList<Uri> uris);
-Observable<List<File>> createFilesFromClipData(final Context context, final ArrayList<Uri> uris);
+Observable<List<File>> createFilesFromClipData(final Context context, final ClipData clipData);
 ```
 
 To get a thumbnail, use:
