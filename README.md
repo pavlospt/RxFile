@@ -17,19 +17,20 @@ compile 'com.github.pavlospt:rxfile:1.4'
 It is really easy to use it, depending on your needs it returns the appropriate file or Bitmap. You can fetch a Bitmap when you are selecting an Image or a Video. The fetched Bitmap is a thumbnail of the selected Image or Video. When you choose to select a file from Dropbox or Drive, the file is being downloaded and copied to the Library's cache folder. It then returns the File object and you have complete access over it in case you need to upload it to a server or in a similar use case.
 
 To get a File, use: (need to change the name of the method) 
-```
+```java
 Observable<File> createFileFromUri(final Context context, final Uri data);
 Observable<List<File>> createFileFromUri(final Context context, final ArrayList<Uri> uris);
 Observable<List<File>> createFilesFromClipData(final Context context, final ClipData clipData);
 ```
 
 To get a thumbnail, use:
-```
+```java
 Observable<Bitmap> getThumbnail(Context context, Uri uri);
 Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int requiredHeight);
 Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int requiredHeight, int kind);
 ```
 
+Get files from a ClipData object (applies to multiple file selection through intent):
 ```java
 RxFile.createFilesFromClipData(this,clipData)
                 .subscribeOn(Schedulers.io())
@@ -54,7 +55,7 @@ RxFile.createFilesFromClipData(this,clipData)
                     }
                 });
 ```
-
+Get file from single Uri:
 ```java
 RxFile.createFileFromUri(this,uri)
                 .subscribeOn(Schedulers.io())
@@ -77,6 +78,7 @@ RxFile.createFileFromUri(this,uri)
                 });
 ```
 
+Get Thumbnail from Uri (photo or video):
 ```java
 RxFile.getThumbnail(this,data)
                 .subscribeOn(Schedulers.io())
