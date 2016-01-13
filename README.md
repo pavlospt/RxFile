@@ -30,6 +30,75 @@ Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int
 Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth, int requiredHeight, int kind);
 ```
 
+```java
+RxFile.createFilesFromClipData(this,clipData)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<File>>() {
+                    @Override
+                    public void onCompleted() {
+                        Timber.e("onCompleted() for Files called");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Timber.e("Error on files fetching:" + e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(List<File> files) {
+                        Timber.e("Files list size:" + files.size());
+                        for(File f : files){
+                            Timber.e("onNext() file called:" + f.getAbsolutePath());
+                        }
+                    }
+                });
+```
+
+```java
+RxFile.createFileFromUri(this,uri)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<File>() {
+                    @Override
+                    public void onCompleted() {
+                        Timber.e("onCompleted() for File called");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Timber.e("Error on file fetching:" + e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(File file) {
+                        Timber.e("onNext() file called:" + file.getAbsolutePath());
+                    }
+                });
+```
+
+```java
+RxFile.getThumbnail(this,data)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Bitmap>() {
+                    @Override
+                    public void onCompleted() {
+                        Timber.e("onCompleted() called");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Timber.e("onError called with: " +  e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(Bitmap bitmap) {
+                        mBitmap.setImageBitmap(bitmap);
+                    }
+                });
+```
+
 For more, check the [Wiki](https://github.com/pavlospt/RxFile/wiki/Methods) 
 
 
