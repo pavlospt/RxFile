@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
-import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.v4.provider.DocumentFile;
@@ -26,7 +25,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import rx.Observable;
@@ -52,6 +50,8 @@ public class RxFile {
 
     private static final String TAG = RxFile.class.getSimpleName();
 
+    private static boolean LOGGING_ENABLED = false;
+
     /*
     * Create a copy of the file found under the provided Uri, in the Library's cache folder.
     * */
@@ -62,7 +62,7 @@ public class RxFile {
                 try {
                     return Observable.just(fileFromUri(context, data));
                 } catch (Exception e) {
-                    Log.e(TAG, "Exception: " + e.getMessage());
+                    logError("Exception:" + e.getMessage() + " line:67");
                     e.printStackTrace();
                     return Observable.error(e);
                 }
@@ -84,7 +84,7 @@ public class RxFile {
                     try {
                         filesRetrieved.add(fileFromUri(context, data));
                     } catch (Exception e) {
-                        Log.e(TAG, "Exception: " + e.getMessage());
+                        logError("Exception:" + e.getMessage() + " line: 89");
                         e.printStackTrace();
                         return Observable.error(e);
                     }
@@ -112,7 +112,7 @@ public class RxFile {
                         try {
                             filesRetrieved.add(fileFromUri(context, data));
                         } catch (Exception e) {
-                            Log.e(TAG, "Exception: " + e.getMessage());
+                            logError("Exception:" + e.getMessage() + " line: 117");
                             e.printStackTrace();
                             return Observable.error(e);
                         }
@@ -189,13 +189,13 @@ public class RxFile {
                     options.inJustDecodeBounds = false;
                 }
                 if (!isMediaUri(data)) {
-                    Log.e(TAG, "Not a media uri");
+                    logDebug("Not a media uri:" + data);
                     if (isGoogleDriveDocument(data)){
-                        Log.e(TAG, "Google Drive Uri");
+                        logDebug("Google Drive Uri:" + data);
                         DocumentFile file = DocumentFile.fromSingleUri(context,data);
                         if(file.getType().startsWith(Constants.IMAGE_TYPE) ||
                                 file.getType().startsWith(Constants.VIDEO_TYPE)) {
-                            Log.e(TAG, "Google Drive Uri");
+                            logDebug("Google Drive Uri:" + data + " (Video or Image)");
                             try {
                                 parcelFileDescriptor = context.getContentResolver().
                                         openFileDescriptor(data, Constants.READ_MODE);
@@ -204,11 +204,12 @@ public class RxFile {
                                 parcelFileDescriptor.close();
                                 return bitmap;
                             } catch (IOException e) {
+                                logError("Exception:" + e.getMessage() + " line: 209");
                                 e.printStackTrace();
                             }
                         }
                     }else if(data.getScheme().equals(Constants.FILE)){
-                        Log.e(TAG,"Dropbox or other content provider");
+                        logDebug("Dropbox or other DocumentsProvider Uri:" + data);
                         try {
                             parcelFileDescriptor = context.getContentResolver().
                                     openFileDescriptor(data, Constants.READ_MODE);
@@ -217,6 +218,7 @@ public class RxFile {
                             parcelFileDescriptor.close();
                             return bitmap;
                         } catch (IOException e) {
+                            logError("Exception:" + e.getMessage() + " line: 223");
                             e.printStackTrace();
                         }
                     } else {
@@ -228,19 +230,19 @@ public class RxFile {
                             parcelFileDescriptor.close();
                             return bitmap;
                         } catch (IOException e) {
+                            logError("Exception:" + e.getMessage() + " line: 235");
                             e.printStackTrace();
                         }
                     }
                 }else {
-                    Log.e(TAG, "Uri for thumbnail: " + data.toString());
-                    Log.e(TAG, "Uri for thumbnail: " + data);
+                    logDebug("Uri for thumbnail:" + data);
                     String[] parts = data.getLastPathSegment().split(":");
                     String fileId = parts[1];
                     Cursor cursor = null;
                     try {
                         cursor = context.getContentResolver().query(data, null, null, null, null);
                         if (cursor != null) {
-                            Log.e(TAG, "Cursor size: " + cursor.getCount());
+                            logDebug("Cursor size:" + cursor.getCount());
                             if (cursor.moveToFirst()) {
                                 if (data.toString().contains(Constants.VIDEO)) {
                                     bitmap = MediaStore.Video.Thumbnails.getThumbnail(
@@ -249,19 +251,17 @@ public class RxFile {
                                             kind,
                                             options);
                                 } else if (data.toString().contains(Constants.IMAGE)) {
-                                    Log.e(TAG, "Image Uri");
                                     bitmap = MediaStore.Images.Thumbnails.getThumbnail(
                                             context.getContentResolver(),
                                             Long.parseLong(fileId),
                                             kind,
                                             options);
                                 }
-                                Log.e(TAG, bitmap == null ? "null" : "not null");
                             }
                         }
                         return bitmap;
                     } catch (Exception e) {
-                        Log.e(TAG, "Exception while getting thumbnail:" + e.getMessage());
+                        logError("Exception:" + e.getMessage() + " line: 266");
                     } finally {
                         if (cursor != null)
                             cursor.close();
@@ -359,7 +359,7 @@ public class RxFile {
     }
 
     public static Observable<String> getFileType(String filePath) {
-        Log.e(TAG, "Filepath in getFileType: " + filePath);
+        logDebug("Filepath in getFileType: " + filePath);
         final String[] parts = filePath.split("/");
         return Observable.fromCallable(new Func0<String>() {
             @Override
@@ -383,7 +383,7 @@ public class RxFile {
                         pathFound = cursor.getString(
                                 cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA));
                     cursor.close();
-                    Log.e(TAG, "PathFound: " + pathFound);
+                    logDebug("Path found:" + pathFound);
                 }
                 return pathFound;
             }
@@ -406,7 +406,7 @@ public class RxFile {
                     if (cursor.moveToFirst())
                         pathFound = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA));
                     cursor.close();
-                    Log.e(TAG, "PathFound: " + pathFound);
+                    logDebug("Path found:" + pathFound);
                 }
                 return pathFound;
             }
@@ -429,7 +429,7 @@ public class RxFile {
                     if (cursor.moveToFirst())
                         pathFound = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA));
                     cursor.close();
-                    Log.e(TAG, "PathFound: " + pathFound);
+                    logDebug("Path found:" + pathFound);
                 }
                 return pathFound;
             }
@@ -452,7 +452,7 @@ public class RxFile {
                     if (cursor.moveToFirst())
                         pathFound = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA));
                     cursor.close();
-                    Log.e(TAG, "PathFound: " + pathFound);
+                    logDebug("Path found:" + pathFound);
                 }
                 return pathFound;
             }
@@ -496,12 +496,12 @@ public class RxFile {
         if (!checkExistence(path)) {
             File temp = new File(path);
             if (!temp.mkdir()) {
-                Log.e(TAG, "Something went wrong while creating directory: " + path);
+                logError("Something went wrong while creating directory: " + path);
             } else {
-                Log.e(TAG, "Directory: " + path + " created.");
+                logDebug("Directory: " + path + " created.");
             }
         } else {
-            Log.e(TAG, "Directory: " + path + " already exists.");
+            logDebug("Directory: " + path + " already exists.");
         }
     }
 
@@ -509,19 +509,19 @@ public class RxFile {
         if (!checkExistence(path)) {
             File temp = new File(path);
             if (!temp.createNewFile()) {
-                Log.e(TAG, "Something went wrong while creating directory: " + path);
+                logDebug("Something went wrong while creating file: " + path);
             } else {
-                Log.e(TAG, "File: " + path + " created.");
+                logError("File: " + path + " created.");
             }
         } else {
-            Log.e(TAG, "File: " + path + " already exists.");
+            logDebug("File: " + path + " already exists.");
             return false;
         }
         return true;
     }
 
     private static boolean checkExistence(String path) {
-        Log.e(TAG, "Check path: " + path);
+        logDebug("Check path: " + path);
         File temp = new File(path);
         return temp.exists();
     }
@@ -544,7 +544,7 @@ public class RxFile {
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
         final int width = options.outWidth;
-        Log.e(TAG, "Height: " + height + " Width: " + width);
+        logDebug("Height: " + height + " Width: " + width);
         int inSampleSize = 1;
 
         if (height > reqHeight || width > reqWidth) {
@@ -569,16 +569,16 @@ public class RxFile {
         ParcelFileDescriptor parcelFileDescriptor =
                 context.getContentResolver().openFileDescriptor(data, Constants.READ_MODE);
         InputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-        Log.e(TAG,"External cache dir:" + context.getExternalCacheDir());
+        logDebug("External cache dir:" + context.getExternalCacheDir());
         String filePath = context.getExternalCacheDir()
                 + Constants.FOLDER_SEPARATOR
                 + fileName;
         String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
         String mimeType = getMimeType(fileName);
 
-        Log.e(TAG, "From Drive guessed type: " + getMimeType(fileName));
+        logDebug("From Google Drive guessed type: " + getMimeType(fileName));
 
-        Log.e(TAG, "Extension: " + fileExtension);
+        logDebug("Extension: " + fileExtension);
 
         if (fileType.equals(Constants.APPLICATION_PDF)
                 && mimeType == null) {
@@ -595,8 +595,22 @@ public class RxFile {
         from.close();
         to.close();
         fileCreated = new File(filePath);
-        Log.e(TAG, "Path for made file: " + fileCreated.getAbsolutePath());
+        logDebug("Path for made file: " + fileCreated.getAbsolutePath());
         return fileCreated;
+    }
+
+    public static void setLoggingEnabled(boolean loggingEnabled) {
+        LOGGING_ENABLED = loggingEnabled;
+    }
+
+    private static void logDebug(String message) {
+        if(LOGGING_ENABLED)
+            Log.d(TAG, message);
+    }
+
+    private static void logError(String message) {
+        if(LOGGING_ENABLED)
+            Log.e(TAG, message);
     }
 
 }
