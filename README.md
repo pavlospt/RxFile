@@ -10,11 +10,16 @@ Rx methods to get a File and Image or Video thumbnails from any DocumentProvider
 
 Available on `jCenter()` and `mavenCentral()`
 ```
-compile 'com.github.pavlospt:rxfile:1.4'
+compile 'com.github.pavlospt:rxfile:1.5'
 ```
 
 # How To Use
 It is really easy to use it, depending on your needs it returns the appropriate file or Bitmap. You can fetch a Bitmap when you are selecting an Image or a Video. The fetched Bitmap is a thumbnail of the selected Image or Video. When you choose to select a file from Dropbox or Drive, the file is being downloaded and copied to the Library's cache folder. It then returns the File object and you have complete access over it in case you need to upload it to a server or in a similar use case.
+
+To enable logging:
+```java
+RxFile.setLoggingEnabled(true);
+```
 
 To get a File, use: (need to change the name of the method) 
 ```java
