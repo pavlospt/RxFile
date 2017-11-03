@@ -3,18 +3,18 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'com.github.pavlospt'
     PUBLISH_ARTIFACT_ID = 'rxfile'
-    PUBLISH_VERSION = '1.6'
+    PUBLISH_VERSION = '1.7'
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 23
-        versionCode 7
-        versionName "1.6"
+        targetSdkVersion 26
+        versionCode 8
+        versionName "1.7"
     }
 
     testOptions {

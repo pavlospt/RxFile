@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                     DocumentFile file = DocumentFile.fromSingleUri(this,data.getClipData().getItemAt(0).getUri());
                     Log.e(TAG,"FileName: " + file.getName() + " FileType: " + file.getType());
                     Log.e(TAG,"Document uri: " + file.getUri());
-//                    fetchFiles(data.getClipData());
+                    fetchFiles(data.getClipData());
                 }
             }else if(requestCode == REQUEST_FOR_FILES){
                 if(data.getData() != null) {

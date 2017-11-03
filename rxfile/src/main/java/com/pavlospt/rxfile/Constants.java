@@ -6,7 +6,6 @@ import android.support.v4.util.ArrayMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 
 /**
  * Copyright 2015 Pavlos-Petros Tournaris
