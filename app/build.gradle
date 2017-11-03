@@ -20,10 +20,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:26.1.0'
-    compile 'com.android.support:design:26.1.0'
-    compile project(':rxfile')
-    compile 'com.jakewharton.timber:timber:4.5.1'
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:design:26.1.0'
+    implementation 'com.jakewharton.timber:timber:4.5.1'
+    implementation 'io.reactivex:rxandroid:1.1.0'
+    implementation project(':rxfile')
 }
