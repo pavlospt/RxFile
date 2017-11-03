@@ -1,11 +1,14 @@
 package com.pavlospt.rxfileexample;
 
+import android.Manifest;
 import android.content.ClipData;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -39,14 +42,31 @@ public class MainActivity extends AppCompatActivity {
 
     mBitmap = findViewById(R.id.iv_bitmap);
 
+    RxFile.setLoggingEnabled(true);
+
     FloatingActionButton fab = findViewById(R.id.fab);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View view) {
-        //                startIntentForFilePick();
-        //                startIntentForPick();
-        startIntentForMultiFilePick();
+        pickFile();
       }
     });
+  }
+
+  private void pickFile() {
+    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+        == PackageManager.PERMISSION_GRANTED) {
+      initiatePick();
+    } else {
+      ActivityCompat.requestPermissions(this,
+          new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1234);
+    }
+  }
+
+  private void initiatePick() {
+    //startIntentForFilePick();
+    //startIntentForMultiFilePick();
+
+    startIntentForPick();
   }
 
   private void startIntentForMultiFilePick() {
@@ -108,6 +128,8 @@ public class MainActivity extends AppCompatActivity {
           Log.e(TAG, "Document uri: " + file.getUri());
           fetchFiles(data.getClipData());
         }
+      } else if (requestCode == 1234) {
+        initiatePick();
       }
     }
   }
