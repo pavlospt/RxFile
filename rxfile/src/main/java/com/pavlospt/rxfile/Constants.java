@@ -2,7 +2,7 @@ package com.pavlospt.rxfile;
 
 
 import android.provider.MediaStore;
-import android.util.ArrayMap;
+import android.support.v4.util.ArrayMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
