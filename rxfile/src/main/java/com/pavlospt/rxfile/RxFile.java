@@ -12,6 +12,7 @@ import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -50,14 +51,33 @@ public class RxFile {
 
   private static boolean LOGGING_ENABLED = false;
 
+  public enum MimeMap {
+    MimeTypeMap,
+    UrlConnection
+  }
+
   /*
   * Create a copy of the file found under the provided Uri, in the Library's cache folder.
+  *
+  * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
   * */
   public static Observable<File> createFileFromUri(final Context context, final Uri data) {
+    return createFileFromUri(context, data, MimeMap.UrlConnection);
+  }
+
+  /*
+   * Create a copy of the file found under the provided Uri, in the Library's cache folder.
+   *
+   * You can supply mime type mapping parameter to choose which map will be used.
+   *
+   * MIME_TYPE_MAP - The mime type of the resource will be determined by MimeTypeMap.getMimeTypeFromExtension() method.
+   * URL_CONNECTION_MAP - The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
+   * */
+  private static Observable<File> createFileFromUri(final Context context, final Uri data, final MimeMap mimeTypeMap) {
     return Observable.defer(new Func0<Observable<File>>() {
       @Override public Observable<File> call() {
         try {
-          return Observable.just(fileFromUri(context, data));
+          return Observable.just(fileFromUri(context, data, mimeTypeMap));
         } catch (Exception e) {
           logError("Exception:" + e.getMessage() + " line:67");
           e.printStackTrace();
@@ -69,9 +89,23 @@ public class RxFile {
 
   /*
   * Create a copy of the files found under the provided ArrayList of Uris, in the Library's cache folder.
+  *
+   * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
   * */
   public static Observable<List<File>> createFileFromUri(final Context context,
       final ArrayList<Uri> uris) {
+    return createFileFromUri(context, uris, MimeMap.UrlConnection);
+  }
+
+  /*
+   * Create a copy of the files found under the provided ArrayList of Uris, in the Library's cache folder.
+   *
+   * You can supply mime type mapping parameter to choose which map will be used.
+   *
+   * MIME_TYPE_MAP - The mime type of the resource will be determined by MimeTypeMap.getMimeTypeFromExtension() method.
+   * URL_CONNECTION_MAP - The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
+   * */
+  private static Observable<List<File>> createFileFromUri(final Context context, final ArrayList<Uri> uris, final MimeMap mimeTypeMap) {
     return Observable.defer(new Func0<Observable<List<File>>>() {
       @Override public Observable<List<File>> call() {
 
@@ -79,7 +113,7 @@ public class RxFile {
 
         for (Uri data : uris) {
           try {
-            filesRetrieved.add(fileFromUri(context, data));
+            filesRetrieved.add(fileFromUri(context, data, mimeTypeMap));
           } catch (Exception e) {
             logError("Exception:" + e.getMessage() + " line: 89");
             e.printStackTrace();
@@ -94,10 +128,25 @@ public class RxFile {
 
   /*
   * Create a copy of the files found under the ClipData item passed from MultiSelection, in the Library's cache folder.
+  *
+   * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
   * */
   public static Observable<List<File>> createFilesFromClipData(final Context context,
       final ClipData clipData) {
 
+    return createFilesFromClipData(context, clipData, MimeMap.UrlConnection);
+  }
+
+  /*
+   * Create a copy of the files found under the ClipData item passed from MultiSelection, in the Library's cache folder.
+   *
+   * You can supply mime type mapping parameter to choose which map will be used.
+   *
+   * MIME_TYPE_MAP - The mime type of the resource will be determined by MimeTypeMap.getMimeTypeFromExtension() method.
+   * URL_CONNECTION_MAP - The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
+   *
+   * */
+  private static Observable<List<File>> createFilesFromClipData(final Context context, final ClipData clipData, final MimeMap mimeTypeMap) {
     return Observable.defer(new Func0<Observable<List<File>>>() {
       @Override public Observable<List<File>> call() {
         int numOfUris = clipData.getItemCount();
@@ -107,7 +156,7 @@ public class RxFile {
           Uri data = clipData.getItemAt(i).getUri();
           if (data != null) {
             try {
-              filesRetrieved.add(fileFromUri(context, data));
+              filesRetrieved.add(fileFromUri(context, data, mimeTypeMap));
             } catch (Exception e) {
               logError("Exception:" + e.getMessage() + " line: 117");
               e.printStackTrace();
@@ -465,7 +514,12 @@ public class RxFile {
     return (res == PackageManager.PERMISSION_GRANTED);
   }
 
-  public static String getMimeType(String fileName) {
+  public static String getTypeWithMimeTypeMap(String fileName) {
+    String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
+    return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
+  }
+
+  public static String getTypeWithURLConnection(String fileName) {
     return URLConnection.guessContentTypeFromName(fileName);
   }
 
@@ -537,7 +591,7 @@ public class RxFile {
     return inSampleSize;
   }
 
-  private static File fileFromUri(Context context, Uri data) throws Exception {
+  private static File fileFromUri(Context context, Uri data, MimeMap mimeTypeMap) throws Exception {
     DocumentFile file = DocumentFile.fromSingleUri(context, data);
     String fileType = file.getType();
     String fileName = file.getName();
@@ -548,10 +602,9 @@ public class RxFile {
     logDebug("External cache dir:" + context.getExternalCacheDir());
     String filePath = context.getExternalCacheDir() + Constants.FOLDER_SEPARATOR + fileName;
     String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-    String mimeType = getMimeType(fileName);
+    String mimeType = mimeTypeMap == MimeMap.MimeTypeMap ? getTypeWithMimeTypeMap(fileName) : getTypeWithURLConnection(fileName);
 
-    logDebug("From Google Drive guessed type: " + getMimeType(fileName));
-
+    logDebug("From Google Drive guessed type: " + mimeType);
     logDebug("Extension: " + fileExtension);
 
     if (fileType.equals(Constants.APPLICATION_PDF) && mimeType == null) {
