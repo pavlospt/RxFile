@@ -57,10 +57,10 @@ public class RxFile {
   }
 
   /*
-  * Create a copy of the file found under the provided Uri, in the Library's cache folder.
-  *
-  * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
-  * */
+   * Create a copy of the file found under the provided Uri, in the Library's cache folder.
+   *
+   * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
+   * */
   public static Observable<File> createFileFromUri(final Context context, final Uri data) {
     return createFileFromUri(context, data, MimeMap.UrlConnection);
   }
@@ -73,14 +73,15 @@ public class RxFile {
    * MIME_TYPE_MAP - The mime type of the resource will be determined by MimeTypeMap.getMimeTypeFromExtension() method.
    * URL_CONNECTION_MAP - The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
    * */
-  private static Observable<File> createFileFromUri(final Context context, final Uri data, final MimeMap mimeTypeMap) {
+  private static Observable<File> createFileFromUri(final Context context, final Uri data,
+      final MimeMap mimeTypeMap) {
     return Observable.defer(new Func0<Observable<File>>() {
-      @Override public Observable<File> call() {
+      @Override
+      public Observable<File> call() {
         try {
           return Observable.just(fileFromUri(context, data, mimeTypeMap));
         } catch (Exception e) {
-          logError("Exception:" + e.getMessage() + " line:67");
-          e.printStackTrace();
+          logError(e);
           return Observable.error(e);
         }
       }
@@ -88,10 +89,10 @@ public class RxFile {
   }
 
   /*
-  * Create a copy of the files found under the provided ArrayList of Uris, in the Library's cache folder.
-  *
+   * Create a copy of the files found under the provided ArrayList of Uris, in the Library's cache folder.
+   *
    * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
-  * */
+   * */
   public static Observable<List<File>> createFileFromUri(final Context context,
       final ArrayList<Uri> uris) {
     return createFileFromUri(context, uris, MimeMap.UrlConnection);
@@ -105,9 +106,11 @@ public class RxFile {
    * MIME_TYPE_MAP - The mime type of the resource will be determined by MimeTypeMap.getMimeTypeFromExtension() method.
    * URL_CONNECTION_MAP - The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
    * */
-  private static Observable<List<File>> createFileFromUri(final Context context, final ArrayList<Uri> uris, final MimeMap mimeTypeMap) {
+  private static Observable<List<File>> createFileFromUri(final Context context,
+      final ArrayList<Uri> uris, final MimeMap mimeTypeMap) {
     return Observable.defer(new Func0<Observable<List<File>>>() {
-      @Override public Observable<List<File>> call() {
+      @Override
+      public Observable<List<File>> call() {
 
         List<File> filesRetrieved = new ArrayList<>(uris.size());
 
@@ -115,8 +118,7 @@ public class RxFile {
           try {
             filesRetrieved.add(fileFromUri(context, data, mimeTypeMap));
           } catch (Exception e) {
-            logError("Exception:" + e.getMessage() + " line: 89");
-            e.printStackTrace();
+            logError(e);
             return Observable.error(e);
           }
         }
@@ -127,10 +129,10 @@ public class RxFile {
   }
 
   /*
-  * Create a copy of the files found under the ClipData item passed from MultiSelection, in the Library's cache folder.
-  *
+   * Create a copy of the files found under the ClipData item passed from MultiSelection, in the Library's cache folder.
+   *
    * The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
-  * */
+   * */
   public static Observable<List<File>> createFilesFromClipData(final Context context,
       final ClipData clipData) {
 
@@ -146,9 +148,11 @@ public class RxFile {
    * URL_CONNECTION_MAP - The mime type of the resource will be determined by URLConnection.guessContentTypeFromName() method.
    *
    * */
-  private static Observable<List<File>> createFilesFromClipData(final Context context, final ClipData clipData, final MimeMap mimeTypeMap) {
+  private static Observable<List<File>> createFilesFromClipData(final Context context,
+      final ClipData clipData, final MimeMap mimeTypeMap) {
     return Observable.defer(new Func0<Observable<List<File>>>() {
-      @Override public Observable<List<File>> call() {
+      @Override
+      public Observable<List<File>> call() {
         int numOfUris = clipData.getItemCount();
         List<File> filesRetrieved = new ArrayList<>(numOfUris);
 
@@ -158,8 +162,7 @@ public class RxFile {
             try {
               filesRetrieved.add(fileFromUri(context, data, mimeTypeMap));
             } catch (Exception e) {
-              logError("Exception:" + e.getMessage() + " line: 117");
-              e.printStackTrace();
+              logError(e);
               return Observable.error(e);
             }
           }
@@ -170,40 +173,40 @@ public class RxFile {
   }
 
   /*
-  * Get a thumbnail from the provided Image or Video Uri.
-  * */
+   * Get a thumbnail from the provided Image or Video Uri.
+   * */
   public static Observable<Bitmap> getThumbnail(Context context, Uri uri) {
     return getThumbnailFromUri(context, uri);
   }
 
   /*
-  * Get a thumbnail from the provided Image or Video Uri in the specified size.
-  * */
+   * Get a thumbnail from the provided Image or Video Uri in the specified size.
+   * */
   public static Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth,
       int requiredHeight) {
     return getThumbnailFromUriWithSize(context, uri, requiredWidth, requiredHeight);
   }
 
   /*
-  * Get a thumbnail from the provided Image or Video Uri in the specified size and kind.
-  * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
-  * */
+   * Get a thumbnail from the provided Image or Video Uri in the specified size and kind.
+   * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
+   * */
   public static Observable<Bitmap> getThumbnail(Context context, Uri uri, int requiredWidth,
       int requiredHeight, int kind) {
     return getThumbnailFromUriWithSizeAndKind(context, uri, requiredWidth, requiredHeight, kind);
   }
 
   /*
-  * Get a thumbnail from the provided Image or Video Uri.
-  * */
+   * Get a thumbnail from the provided Image or Video Uri.
+   * */
   private static Observable<Bitmap> getThumbnailFromUri(final Context context, final Uri data) {
     return getThumbnailFromUriWithSizeAndKind(context, data, 0, 0,
         MediaStore.Images.Thumbnails.MINI_KIND);
   }
 
   /*
-  * Get a thumbnail from the provided Image or Video Uri in the specified size.
-  * */
+   * Get a thumbnail from the provided Image or Video Uri in the specified size.
+   * */
   private static Observable<Bitmap> getThumbnailFromUriWithSize(final Context context,
       final Uri data, final int requiredWidth, final int requiredHeight) {
     return getThumbnailFromUriWithSizeAndKind(context, data, requiredWidth, requiredHeight,
@@ -211,13 +214,14 @@ public class RxFile {
   }
 
   /*
-  * Get a thumbnail from the provided Image or Video Uri in the specified size and kind.
-  * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
-  * */
+   * Get a thumbnail from the provided Image or Video Uri in the specified size and kind.
+   * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
+   * */
   private static Observable<Bitmap> getThumbnailFromUriWithSizeAndKind(final Context context,
       final Uri data, final int requiredWidth, final int requiredHeight, final int kind) {
     return Observable.fromCallable(new Func0<Bitmap>() {
-      @Override public Bitmap call() {
+      @Override
+      public Bitmap call() {
         Bitmap bitmap = null;
         ParcelFileDescriptor parcelFileDescriptor;
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -242,8 +246,7 @@ public class RxFile {
                 parcelFileDescriptor.close();
                 return bitmap;
               } catch (IOException e) {
-                logError("Exception:" + e.getMessage() + " line: 209");
-                e.printStackTrace();
+                logError(e);
               }
             }
           } else if (data.getScheme().equals(Constants.FILE)) {
@@ -256,8 +259,7 @@ public class RxFile {
               parcelFileDescriptor.close();
               return bitmap;
             } catch (IOException e) {
-              logError("Exception:" + e.getMessage() + " line: 223");
-              e.printStackTrace();
+              logError(e);
             }
           } else {
             try {
@@ -268,8 +270,7 @@ public class RxFile {
               parcelFileDescriptor.close();
               return bitmap;
             } catch (IOException e) {
-              logError("Exception:" + e.getMessage() + " line: 235");
-              e.printStackTrace();
+              logError(e);
             }
           }
         } else {
@@ -293,7 +294,7 @@ public class RxFile {
             }
             return bitmap;
           } catch (Exception e) {
-            logError("Exception:" + e.getMessage() + " line: 266");
+            logError(e);
           } finally {
             if (cursor != null) cursor.close();
           }
@@ -304,37 +305,41 @@ public class RxFile {
   }
 
   /*
-  * Get a file extension based on the given file name.
-  * */
+   * Get a file extension based on the given file name.
+   * */
   public static Observable<String> getFileExtension(final String fileName) {
     return Observable.fromCallable(new Func0<String>() {
-      @Override public String call() {
+      @Override
+      public String call() {
         return fileName.substring((fileName.lastIndexOf('.')) + 1);
       }
     });
   }
 
   /*
-  * Check if a File exists.
-  * */
+   * Check if a File exists.
+   * */
   public static Observable<Boolean> ifExists(final String path) {
     return Observable.fromCallable(new Func0<Boolean>() {
-      @Override public Boolean call() {
+      @Override
+      public Boolean call() {
         return new File(path).exists();
       }
     });
   }
 
   /*
-  * Get thumbnail from a File path.
-  * */
+   * Get thumbnail from a File path.
+   * */
   public static Observable<Bitmap> getThumbnail(String filePath) {
     return getFileType(filePath).filter(new Func1<String, Boolean>() {
-      @Override public Boolean call(String s) {
+      @Override
+      public Boolean call(String s) {
         return s != null;
       }
     }).flatMap(new Func1<String, Observable<Bitmap>>() {
-      @Override public Observable<Bitmap> call(String s) {
+      @Override
+      public Observable<Bitmap> call(String s) {
         if (s.equalsIgnoreCase(Constants.VIDEO)) {
           return getVideoThumbnail(s);
         } else if (s.equalsIgnoreCase(Constants.IMAGE)) return getThumbnailFromPath(s);
@@ -344,11 +349,12 @@ public class RxFile {
   }
 
   /*
-  * Get video thumbnail from a video file, by path.
-  * */
+   * Get video thumbnail from a video file, by path.
+   * */
   public static Observable<Bitmap> getVideoThumbnail(final String filePath) {
     return Observable.fromCallable(new Func0<Bitmap>() {
-      @Override public Bitmap call() {
+      @Override
+      public Bitmap call() {
         return ThumbnailUtils.createVideoThumbnail(filePath,
             MediaStore.Images.Thumbnails.MINI_KIND);
       }
@@ -356,25 +362,27 @@ public class RxFile {
   }
 
   /*
-  * Get video thumbnail from a video file, by path, with the selected kind.
-  * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
-  * */
+   * Get video thumbnail from a video file, by path, with the selected kind.
+   * Kind is a value of MediaStore.Images.Thumbnails.MICRO_KIND or MediaStore.Images.Thumbnails.MINI_KIND
+   * */
   public static Observable<Bitmap> getVideoThumbnailFromPathWithKind(final String path,
       final int kind) {
     return Observable.defer(new Func0<Observable<Bitmap>>() {
-      @Override public Observable<Bitmap> call() {
+      @Override
+      public Observable<Bitmap> call() {
         return Observable.just(ThumbnailUtils.createVideoThumbnail(path, kind));
       }
     });
   }
 
   /*
-  * Get image thumbnail from an image file, by path.
-  * */
+   * Get image thumbnail from an image file, by path.
+   * */
   public static Observable<Bitmap> getThumbnailFromPath(String filePath) {
     final Bitmap sourceBitmap = BitmapFactory.decodeFile(filePath);
     return Observable.fromCallable(new Func0<Bitmap>() {
-      @Override public Bitmap call() {
+      @Override
+      public Bitmap call() {
         return ThumbnailUtils.
             extractThumbnail(sourceBitmap, sourceBitmap.getWidth(), sourceBitmap.getHeight());
       }
@@ -385,19 +393,21 @@ public class RxFile {
     logDebug("Filepath in getFileType: " + filePath);
     final String[] parts = filePath.split("/");
     return Observable.fromCallable(new Func0<String>() {
-      @Override public String call() {
+      @Override
+      public String call() {
         return parts.length > 0 ? URLConnection.guessContentTypeFromName(parts[0]) : null;
       }
     });
   }
 
   /*
-  * Get path from Uri, for a FileDocument.
-  * */
+   * Get path from Uri, for a FileDocument.
+   * */
   public static Observable<String> getPathFromUriForFileDocument(final Context context,
       final Uri contentUri) {
     return Observable.fromCallable(new Func0<String>() {
-      @Override public String call() {
+      @Override
+      public String call() {
         String pathFound = null;
         Cursor cursor = context.getContentResolver().query(contentUri, null, null, null, null);
         if (cursor != null) {
@@ -414,12 +424,13 @@ public class RxFile {
   }
 
   /*
-  * Get path from Uri, for a MediaDocument.
-  * */
+   * Get path from Uri, for a MediaDocument.
+   * */
   public static Observable<String> getPathFromUriForMediaDocument(final Context context,
       final Uri mediaUri, final String mediaDocumentId) {
     return Observable.fromCallable(new Func0<String>() {
-      @Override public String call() {
+      @Override
+      public String call() {
         String pathFound = null;
         Cursor cursor = context.getContentResolver()
             .query(mediaUri, null, Constants.ID_COLUMN_VALUE + " =?",
@@ -438,12 +449,13 @@ public class RxFile {
   }
 
   /*
-  * Get path from Uri, for an ImageDocument.
-  * */
+   * Get path from Uri, for an ImageDocument.
+   * */
   public static Observable<String> getPathFromUriForImageDocument(final Context context,
       final String mediaDocumentId) {
     return Observable.fromCallable(new Func0<String>() {
-      @Override public String call() {
+      @Override
+      public String call() {
         String pathFound = null;
         Cursor cursor = context.getContentResolver()
             .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null,
@@ -462,12 +474,13 @@ public class RxFile {
   }
 
   /*
-  * Get path from Uri, for a VideoDocument.
-  * */
+   * Get path from Uri, for a VideoDocument.
+   * */
   public static Observable<String> getPathFromUriForVideoDocument(final Context context,
       final String mediaDocumentId) {
     return Observable.fromCallable(new Func0<String>() {
-      @Override public String call() {
+      @Override
+      public String call() {
         String pathFound = null;
         Cursor cursor = context.getContentResolver()
             .query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, null,
@@ -523,26 +536,13 @@ public class RxFile {
     return URLConnection.guessContentTypeFromName(fileName);
   }
 
-  private static void createDirectory(String path) {
-    if (!checkExistence(path)) {
-      File temp = new File(path);
-      if (!temp.mkdir()) {
-        logError("Something went wrong while creating directory: " + path);
-      } else {
-        logDebug("Directory: " + path + " created.");
-      }
-    } else {
-      logDebug("Directory: " + path + " already exists.");
-    }
-  }
-
   private static boolean createFile(String path) throws IOException {
     if (!checkExistence(path)) {
       File temp = new File(path);
       if (!temp.createNewFile()) {
         logDebug("Something went wrong while creating file: " + path);
       } else {
-        logError("File: " + path + " created.");
+        logDebug("File: " + path + " created.");
       }
     } else {
       logDebug("File: " + path + " already exists.");
@@ -602,7 +602,8 @@ public class RxFile {
     logDebug("External cache dir:" + context.getExternalCacheDir());
     String filePath = context.getExternalCacheDir() + Constants.FOLDER_SEPARATOR + fileName;
     String fileExtension = fileName.substring((fileName.lastIndexOf('.')) + 1);
-    String mimeType = mimeTypeMap == MimeMap.MimeTypeMap ? getTypeWithMimeTypeMap(fileName) : getTypeWithURLConnection(fileName);
+    String mimeType = mimeTypeMap == MimeMap.MimeTypeMap ? getTypeWithMimeTypeMap(fileName)
+        : getTypeWithURLConnection(fileName);
 
     logDebug("From Google Drive guessed type: " + mimeType);
     logDebug("Extension: " + fileExtension);
@@ -633,7 +634,7 @@ public class RxFile {
     if (LOGGING_ENABLED) Log.d(TAG, message);
   }
 
-  private static void logError(String message) {
-    if (LOGGING_ENABLED) Log.e(TAG, message);
+  private static void logError(Throwable throwable) {
+    if (LOGGING_ENABLED) Log.e(TAG, "", throwable);
   }
 }
