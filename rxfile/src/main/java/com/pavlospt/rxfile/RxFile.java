@@ -10,7 +10,7 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.support.v4.provider.DocumentFile;
+import androidx.documentfile.provider.DocumentFile;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import java.io.File;
